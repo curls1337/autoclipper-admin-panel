@@ -1,0 +1,10 @@
+{
+  "name": "curls1337/autoclipper-admin",
+  "description": "Auto Clipper Web Admin",
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-curl": "*"
+  }
+}
