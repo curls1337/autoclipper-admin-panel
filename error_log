@@ -1,0 +1,18 @@
+[20-Jan-2026 13:44:47 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1 in /home/edut8795/public_html/web_admin/api.php:215
+Stack trace:
+#0 /home/edut8795/public_html/web_admin/api.php(215): PDO->prepare()
+#1 /home/edut8795/public_html/web_admin/api.php(65): generateLicense()
+#2 {main}
+  thrown in /home/edut8795/public_html/web_admin/api.php on line 215
+[20-Jan-2026 13:44:56 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1 in /home/edut8795/public_html/web_admin/api.php:215
+Stack trace:
+#0 /home/edut8795/public_html/web_admin/api.php(215): PDO->prepare()
+#1 /home/edut8795/public_html/web_admin/api.php(65): generateLicense()
+#2 {main}
+  thrown in /home/edut8795/public_html/web_admin/api.php on line 215
+[20-Jan-2026 13:45:27 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1 in /home/edut8795/public_html/web_admin/api.php:215
+Stack trace:
+#0 /home/edut8795/public_html/web_admin/api.php(215): PDO->prepare()
+#1 /home/edut8795/public_html/web_admin/api.php(65): generateLicense()
+#2 {main}
+  thrown in /home/edut8795/public_html/web_admin/api.php on line 215
