@@ -687,12 +687,17 @@
                 <div class="form-group">
                     <label>Select Gemini Model for Validation</label>
                     <select id="geminiModelSelect" style="margin-bottom: 16px;">
+                        <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
                         <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
                         <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
                         <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                        <option value="gemini-flash-latest" selected>Gemini Flash Latest</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash</option>
                         <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        <option value="gemini-flash-latest">Gemini Flash Latest</option>
                     </select>
                 </div>
                 <div class="form-group">

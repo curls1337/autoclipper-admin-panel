@@ -340,12 +340,17 @@ function getGeminiKeys($pdo, $input) {
 function validateGeminiKey($apiKey, $model = 'gemini-flash-latest') {
     // Allowed models only
     $allowedModels = [
+        'gemini-3.5-flash',
+        'gemini-3.1-pro-preview',
         'gemini-3-pro-preview',
         'gemini-3-flash-preview',
         'gemini-2.5-pro',
-        'gemini-flash-latest',
         'gemini-2.5-flash',
-        'gemini-2.5-flash-lite'
+        'gemini-2.5-flash-lite',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro',
+        'gemini-flash-latest'
     ];
     
     if (!in_array($model, $allowedModels)) {
