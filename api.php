@@ -89,6 +89,12 @@ try {
         case 'delete_deepgram_key': deleteDeepgramKey($pdo, $input); break;
         
         case 'report_key_failure': reportKeyFailure($pdo, $input); break;
+        
+        // YouTube Cookies Pool Actions
+        case 'get_youtube_cookies': getYoutubeCookies($pdo, $input); break;
+        case 'add_youtube_cookie': addYoutubeCookie($pdo, $input); break;
+        case 'delete_youtube_cookie': deleteYoutubeCookie($pdo, $input); break;
+        case 'toggle_youtube_cookie_status': toggleYoutubeCookieStatus($pdo, $input); break;
 
         // Reseller Actions
         case 'list_resellers': listResellers($pdo, $input); break;
@@ -216,6 +222,19 @@ function validateLicense($pdo, $input) {
                     $data['credentials']['deepgram_pool'] = $pool;
                     $data['credentials'][$t] = $pool[0] ?? fetchCredential($pdo, $t);
                 } catch (Exception $e) { $data['credentials'][$t] = fetchCredential($pdo, $t); }
+            }
+            elseif ($t === 'youtube_cookies') {
+                try {
+                    $stmt = $pdo->query("SELECT cookie_value FROM youtube_cookies WHERE status = 'active' ORDER BY RAND() LIMIT 1");
+                    $cookie = $stmt->fetchColumn();
+                    if ($cookie) {
+                        $data['credentials'][$t] = $cookie;
+                    } else {
+                        $data['credentials'][$t] = fetchCredential($pdo, $t);
+                    }
+                } catch (Exception $e) {
+                    $data['credentials'][$t] = fetchCredential($pdo, $t);
+                }
             }
             else {
                 $data['credentials'][$t] = fetchCredential($pdo, $t);
@@ -682,6 +701,65 @@ function reportKeyFailure($pdo, $input) {
         echo json_encode(['success' => true, 'message' => "Key marked as $status"]);
     } catch (Exception $e) {
          echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function getYoutubeCookies($pdo, $input) {
+    try {
+        $stmt = $pdo->query("SELECT id, description, status, created_at FROM youtube_cookies ORDER BY id DESC");
+        $cookies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'data' => $cookies]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function addYoutubeCookie($pdo, $input) {
+    $cookie_value = $input['cookie_value'] ?? '';
+    $description = $input['description'] ?? 'Account';
+    
+    if (empty(trim($cookie_value))) {
+        echo json_encode(['success' => false, 'message' => 'Cookie value cannot be empty']);
+        return;
+    }
+    
+    try {
+        $stmt = $pdo->prepare("INSERT INTO youtube_cookies (cookie_value, description, status) VALUES (?, ?, 'active')");
+        $stmt->execute([$cookie_value, $description]);
+        echo json_encode(['success' => true, 'message' => 'Cookie added successfully']);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function deleteYoutubeCookie($pdo, $input) {
+    $id = $input['id'] ?? 0;
+    if (!$id) {
+        echo json_encode(['success' => false, 'message' => 'Missing ID']);
+        return;
+    }
+    try {
+        $stmt = $pdo->prepare("DELETE FROM youtube_cookies WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true, 'message' => 'Cookie deleted successfully']);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function toggleYoutubeCookieStatus($pdo, $input) {
+    $id = $input['id'] ?? 0;
+    $status = $input['status'] ?? 'active'; // 'active' or 'dead'
+    if (!$id) {
+        echo json_encode(['success' => false, 'message' => 'Missing ID']);
+        return;
+    }
+    try {
+        $stmt = $pdo->prepare("UPDATE youtube_cookies SET status = ? WHERE id = ?");
+        $stmt->execute([$status, $id]);
+        echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
 }
 

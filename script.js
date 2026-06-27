@@ -499,14 +499,11 @@ async function loadCredentialsPool() {
                     ? '<span style="color: var(--success);">✅ Tersimpan</span>'
                     : '<span style="color: var(--danger);">❌ Kosong</span>';
             }
-            if (cred.credential_type === 'youtube_cookies') {
-                const el = document.getElementById('cred_youtube_cookies');
-                if (el) {
-                    el.value = cred.credential_value || '';
-                }
-            }
         });
     }
+    
+    // Load YouTube Cookies count
+    await updateYoutubeCookiesCountOnly();
 }
 
 function renderKeyRows(keys, type) {
@@ -781,4 +778,122 @@ function uploadCookiesFile(input) {
         showToast('Cookies file loaded into editor. Click Save Cookies to save.');
     };
     reader.readAsText(file);
+}
+
+// --- YouTube Cookies Pool Helpers ---
+async function updateYoutubeCookiesCountOnly() {
+    const res = await apiRequest({ action: 'get_youtube_cookies' });
+    if (res.success) {
+        const activeCount = res.data.filter(c => c.status === 'active').length;
+        const el = document.getElementById('youtubeCookiesCount');
+        if (el) el.textContent = activeCount;
+    }
+}
+
+async function loadYoutubeCookiesPool() {
+    toggleLoading(true);
+    const res = await apiRequest({ action: 'get_youtube_cookies' });
+    toggleLoading(false);
+    if (res.success) {
+        // Update count on dashboard too
+        const activeCount = res.data.filter(c => c.status === 'active').length;
+        const el = document.getElementById('youtubeCookiesCount');
+        if (el) el.textContent = activeCount;
+        
+        // Render rows
+        const tbody = document.getElementById('youtubeCookiesBody');
+        if (tbody) {
+            if (res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No cookies in pool.</td></tr>';
+            } else {
+                tbody.innerHTML = res.data.map(cookie => {
+                    const statusBadge = cookie.status === 'active' ? 'success' : 'danger';
+                    const newStatus = cookie.status === 'active' ? 'dead' : 'active';
+                    const toggleText = cookie.status === 'active' ? 'Mark Dead' : 'Mark Active';
+                    return `
+                        <tr>
+                            <td>${cookie.description || 'Account'}</td>
+                            <td><span class="badge badge-${statusBadge}">${cookie.status}</span></td>
+                            <td>${cookie.created_at}</td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="toggleCookieStatus(${cookie.id}, '${newStatus}')">${toggleText}</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCookie(${cookie.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    }
+}
+
+function uploadModalCookiesFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('newCookieValue').value = e.target.result;
+        showToast('Cookies file loaded into modal textarea.');
+    };
+    reader.readAsText(file);
+}
+
+async function handleAddCookie() {
+    const val = document.getElementById('newCookieValue').value;
+    const desc = document.getElementById('newCookieDesc').value || 'Account';
+    if (!val.trim()) {
+        return showToast('Cookie value cannot be empty.', 'danger');
+    }
+    
+    toggleLoading(true);
+    const res = await apiRequest({
+        action: 'add_youtube_cookie',
+        cookie_value: val,
+        description: desc
+    });
+    toggleLoading(false);
+    
+    if (res.success) {
+        showToast('YouTube cookie added to pool!');
+        document.getElementById('newCookieValue').value = '';
+        document.getElementById('newCookieDesc').value = '';
+        loadYoutubeCookiesPool();
+    } else {
+        showToast('Failed to add cookie: ' + res.message, 'danger');
+    }
+}
+
+async function deleteCookie(id) {
+    if (!confirm('Are you sure you want to delete this cookie?')) return;
+    
+    toggleLoading(true);
+    const res = await apiRequest({
+        action: 'delete_youtube_cookie',
+        id: id
+    });
+    toggleLoading(false);
+    
+    if (res.success) {
+        showToast('Cookie deleted.');
+        loadYoutubeCookiesPool();
+    } else {
+        showToast('Failed to delete cookie: ' + res.message, 'danger');
+    }
+}
+
+async function toggleCookieStatus(id, status) {
+    toggleLoading(true);
+    const res = await apiRequest({
+        action: 'toggle_youtube_cookie_status',
+        id: id,
+        status: status
+    });
+    toggleLoading(false);
+    
+    if (res.success) {
+        showToast('Cookie status updated.');
+        loadYoutubeCookiesPool();
+    } else {
+        showToast('Failed to update cookie status: ' + res.message, 'danger');
+    }
 }

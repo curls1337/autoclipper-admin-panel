@@ -56,6 +56,19 @@ try {
     $pdo->exec($sql2);
     echo "<span style='color: #4ade80;'>DONE</span><br>";
 
+    // 2.5. Create youtube_cookies table
+    echo "Checking 'youtube_cookies' table... ";
+    $sql_cookies = "CREATE TABLE IF NOT EXISTS `youtube_cookies` (
+        `id` INT PRIMARY KEY AUTO_INCREMENT,
+        `cookie_value` LONGTEXT NOT NULL,
+        `status` ENUM('active', 'dead') DEFAULT 'active',
+        `description` VARCHAR(255) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_status` (`status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+    $pdo->exec($sql_cookies);
+    echo "<span style='color: #4ade80;'>DONE</span><br>";
+
     // 3. Update gemini_keys (Add cooldown_until)
     echo "Checking 'gemini_keys' schema... ";
     try {

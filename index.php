@@ -407,18 +407,15 @@ if (!isset($_SESSION['admin_auth'])) {
                                     </div>
                                 </div>
 
-                                <div class="form-group" style="margin-top: 20px;">
-                                    <label>
-                                        YouTube Cookies (Netscape format)
-                                        <span id="status_youtube_cookies" style="margin-left: 8px; font-size: 0.875rem;"></span>
+                                <div class="form-group" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                                    <label style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>YouTube Cookies Pool (Multiple Accounts)</span>
+                                        <button class="btn btn-primary btn-sm" onclick="showModal('youtubeCookiesModal'); loadYoutubeCookiesPool();">Manage Cookies Pool</button>
                                     </label>
-                                    <div style="display: flex; gap: 8px; flex-direction: column;">
-                                        <textarea id="cred_youtube_cookies" placeholder="# Netscape HTTP Cookie File..." rows="8" style="font-family: monospace; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.1); color: var(--text-color); resize: vertical;"></textarea>
-                                        <div style="display: flex; gap: 12px;">
-                                            <input type="file" id="cookies_file_input" accept=".txt" style="display: none;" onchange="uploadCookiesFile(this)">
-                                            <button class="btn btn-secondary" onclick="document.getElementById('cookies_file_input').click()">Upload cookies.txt</button>
-                                            <button class="btn btn-primary" onclick="saveCred('youtube_cookies')">Save Cookies</button>
-                                        </div>
+                                    <div style="margin-top: 10px;">
+                                        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0;">
+                                            Active YouTube cookies in pool: <span id="youtubeCookiesCount" style="color: var(--primary); font-weight: 700;">0</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -808,6 +805,48 @@ if (!isset($_SESSION['admin_auth'])) {
                             </tr>
                         </thead>
                         <tbody id="deepgramKeysBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Cookies Modal -->
+    <div id="youtubeCookiesModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Manage YouTube Cookies Pool</h3>
+                <button class="btn btn-secondary btn-sm" onclick="hideModal('youtubeCookiesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Add New Cookie (Netscape format)</label>
+                    <textarea id="newCookieValue" placeholder="# Netscape HTTP Cookie File..." rows="8" style="font-family: monospace; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.1); color: var(--text-color); resize: vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Description (e.g. Channel or Account Name)</label>
+                    <input type="text" id="newCookieDesc" placeholder="e.g. Account 1" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.1); color: var(--text-color);">
+                </div>
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <input type="file" id="modal_cookies_file_input" accept=".txt" style="display: none;" onchange="uploadModalCookiesFile(this)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('modal_cookies_file_input').click()">Upload cookies.txt</button>
+                    <button class="btn btn-primary" onclick="handleAddCookie()">Add to Pool</button>
+                </div>
+
+                <h4 style="margin: 24px 0 12px;">Active Cookies Pool</h4>
+                <div id="youtubeCookiesListTable" class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="youtubeCookiesBody">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
