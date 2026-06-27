@@ -769,3 +769,14 @@ function filterLicenses() {
         line.style.display = line.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
 }
+
+function uploadCookiesFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('cred_youtube_cookies').value = e.target.result;
+        showToast('Cookies file loaded into editor. Click Save Cookies to save.');
+    };
+    reader.readAsText(file);
+}

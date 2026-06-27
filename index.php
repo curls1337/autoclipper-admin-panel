@@ -399,6 +399,21 @@
                                         <button class="btn btn-secondary" onclick="saveCred('groq')">Save</button>
                                     </div>
                                 </div>
+
+                                <div class="form-group" style="margin-top: 20px;">
+                                    <label>
+                                        YouTube Cookies (Netscape format)
+                                        <span id="status_youtube_cookies" style="margin-left: 8px; font-size: 0.875rem;"></span>
+                                    </label>
+                                    <div style="display: flex; gap: 8px; flex-direction: column;">
+                                        <textarea id="cred_youtube_cookies" placeholder="# Netscape HTTP Cookie File..." rows="8" style="font-family: monospace; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.1); color: var(--text-color); resize: vertical;"></textarea>
+                                        <div style="display: flex; gap: 12px;">
+                                            <input type="file" id="cookies_file_input" accept=".txt" style="display: none;" onchange="uploadCookiesFile(this)">
+                                            <button class="btn btn-secondary" onclick="document.getElementById('cookies_file_input').click()">Upload cookies.txt</button>
+                                            <button class="btn btn-primary" onclick="saveCred('youtube_cookies')">Save Cookies</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

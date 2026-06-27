@@ -180,7 +180,8 @@ function validateLicense($pdo, $input) {
         'gemini', 'groq', 'apify', 'deepgram', 
         'google_client_id', 'google_client_secret', 'google_redirect_uri',
         'youtube_client_id', 'youtube_client_secret', 'youtube_redirect_uri',
-        'tiktok_client_key', 'tiktok_client_secret', 'tiktok_redirect_uri'
+        'tiktok_client_key', 'tiktok_client_secret', 'tiktok_redirect_uri',
+        'youtube_cookies'
     ];
     foreach ($types as $t) {
         $flag = 'provide_gemini_key'; // default
@@ -189,7 +190,8 @@ function validateLicense($pdo, $input) {
         if (strpos($t, 'apify') !== false) $flag = 'provide_apify_key';
         if (strpos($t, 'deepgram') !== false) $flag = 'provide_deepgram_key';
         if (strpos($t, 'google') !== false) $flag = 'provide_google_oauth';
-        if (strpos($t, 'youtube') !== false) $flag = 'provide_google_oauth'; // YouTube uses Google OAuth flag
+        if (strpos($t, 'youtube_cookies') !== false) $flag = 'feature_youtube_upload';
+        elseif (strpos($t, 'youtube') !== false) $flag = 'provide_google_oauth'; // YouTube uses Google OAuth flag
         if (strpos($t, 'tiktok') !== false) $flag = 'provide_tiktok_key';
         
         if (isset($lic[$flag]) && $lic[$flag]) {
