@@ -319,6 +319,7 @@ function saveCredential($pdo, $input) {
 function getCredentials($pdo, $input) {
     $stmt = $pdo->query("SELECT credential_type, 
                                 CASE 
+                                    WHEN credential_type = 'youtube_cookies' THEN credential_value
                                     WHEN credential_value IS NOT NULL AND credential_value != '' AND credential_value NOT LIKE 'YOUR_%' 
                                     THEN '✅ Tersimpan' 
                                     ELSE '❌ Kosong' 

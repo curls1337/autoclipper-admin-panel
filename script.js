@@ -499,6 +499,12 @@ async function loadCredentialsPool() {
                     ? '<span style="color: var(--success);">✅ Tersimpan</span>'
                     : '<span style="color: var(--danger);">❌ Kosong</span>';
             }
+            if (cred.credential_type === 'youtube_cookies') {
+                const el = document.getElementById('cred_youtube_cookies');
+                if (el) {
+                    el.value = cred.credential_value || '';
+                }
+            }
         });
     }
 }
