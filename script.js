@@ -4,9 +4,6 @@
  */
 
 const API_URL = 'api.php';
-// We'll try to get this from session if possible, but keeping for legacy compatibility
-// Keep this synchronized with config.php
-const ADMIN_KEY = 'Tak-ada-yang-abadi';
 let currentLicenses = [];
 
 // --- Initialize Lucide Icons ---
@@ -86,7 +83,6 @@ function hideModal(id) {
 }
 
 async function apiRequest(data) {
-    data.admin_key = ADMIN_KEY;
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
