@@ -921,7 +921,7 @@ if (!isset($_SESSION['admin_auth'])) {
         <div class="spinner" style="width: 48px; height: 48px;"></div>
     </div>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
 </body>
 
 </html>
