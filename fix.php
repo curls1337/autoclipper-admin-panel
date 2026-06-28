@@ -69,6 +69,22 @@ try {
     $pdo->exec($sql_cookies);
     echo "<span style='color: #4ade80;'>DONE</span><br>";
 
+    // 2.6. Create yolo_keys table
+    echo "Checking 'yolo_keys' table... ";
+    $sql_yolo = "CREATE TABLE IF NOT EXISTS `yolo_keys` (
+        `id` INT PRIMARY KEY AUTO_INCREMENT,
+        `endpoint_url` VARCHAR(255) UNIQUE NOT NULL,
+        `api_key` VARCHAR(255) NOT NULL,
+        `status` ENUM('active', 'limit', 'dead', 'cooldown') DEFAULT 'active',
+        `error_msg` TEXT DEFAULT NULL,
+        `last_checked` TIMESTAMP NULL DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_status` (`status`),
+        INDEX `idx_endpoint_url` (`endpoint_url`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+    $pdo->exec($sql_yolo);
+    echo "<span style='color: #4ade80;'>DONE</span><br>";
+
     // 3. Update gemini_keys (Add cooldown_until)
     echo "Checking 'gemini_keys' schema... ";
     try {

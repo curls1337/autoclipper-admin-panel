@@ -42,7 +42,8 @@ function switchTab(panelId, element) {
     if (panelId === 'licenses' || panelId === 'dashboard') loadLicenses();
     if (panelId === 'resellers') loadResellers();
     if (panelId === 'credentials') loadCredentialsPool();
-
+    if (panelId === 'yolo') loadYoloKeys();
+ 
     initIcons();
 }
 
@@ -751,6 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initIcons();
     loadLicenses();
     loadCredentialsPool(); // Check for alerts immediately
+    updateYoloKeysCountOnly();
 
     // Auto-refresh stats every minute
     setInterval(() => {
@@ -895,5 +897,153 @@ async function toggleCookieStatus(id, status) {
         loadYoutubeCookiesPool();
     } else {
         showToast('Failed to update cookie status: ' + res.message, 'danger');
+    }
+}
+
+// --- YOLO Deployments Pool Helpers ---
+async function updateYoloKeysCountOnly() {
+    const res = await apiRequest({ action: 'get_yolo_keys' });
+    if (res.success) {
+        const activeCount = res.data.filter(k => k.status === 'active').length;
+        const el = document.getElementById('yoloCount');
+        if (el) el.textContent = activeCount;
+    }
+}
+
+async function loadYoloKeys() {
+    toggleLoading(true);
+    const res = await apiRequest({ action: 'get_yolo_keys' });
+    toggleLoading(false);
+    if (res.success) {
+        const activeCount = res.data.filter(k => k.status === 'active').length;
+        const el = document.getElementById('yoloCount');
+        if (el) el.textContent = activeCount;
+        
+        const tbody = document.getElementById('yoloKeysBody');
+        if (tbody) {
+            if (res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No deployments in pool.</td></tr>';
+            } else {
+                tbody.innerHTML = res.data.map(k => {
+                    const statusBadge = k.status === 'active' ? 'success' : (k.status === 'dead' ? 'danger' : 'warning');
+                    return `
+                        <tr>
+                            <td><code style="word-break: break-all;">${k.endpoint_url}</code></td>
+                            <td><code>${k.api_key_masked}</code></td>
+                            <td><span class="badge badge-${statusBadge}">${k.status}</span></td>
+                            <td>${k.last_checked || 'Never'}</td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="testYoloKey(${k.id})">Test</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteYoloKey(${k.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        const grid = document.getElementById('yoloStatusGrid');
+        if (grid) {
+            if (res.data.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: var(--text-muted); padding: 40px;">Belum ada deployment YOLO. Klik "Manage YOLO Deployments" untuk menambahkan.</div>';
+            } else {
+                grid.innerHTML = res.data.map(k => {
+                    const statusClass = k.status === 'active' ? 'status-active' : (k.status === 'dead' ? 'status-dead' : 'status-cooldown');
+                    return `
+                        <div class="card credential-card" style="margin-bottom:0;">
+                            <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; max-width:75%;">
+                                    <div class="status-dot ${k.status === 'active' ? 'online' : 'offline'}"></div>
+                                    <strong style="word-break: break-all; font-size: 0.85rem;">${k.endpoint_url}</strong>
+                                </div>
+                                <span class="badge badge-${k.status === 'active' ? 'success' : (k.status === 'dead' ? 'danger' : 'warning')}">${k.status}</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); display: grid; gap: 4px;">
+                                <div>API Key: <code>${k.api_key_masked}</code></div>
+                                <div>Last Checked: ${k.last_checked || 'Never'}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                                <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="testYoloKey(${k.id})">Re-Test</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteYoloKey(${k.id})">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    }
+}
+
+async function handleBulkYolo() {
+    const val = document.getElementById('bulkYoloKeys').value;
+    if (!val.trim()) {
+        return showToast('Please enter at least one deployment.', 'danger');
+    }
+    
+    const lines = val.split('\n');
+    const entries = [];
+    for (let line of lines) {
+        line = line.trim();
+        if (!line || line.startsWith('#')) continue;
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+            entries.push({
+                endpoint_url: parts[0].trim(),
+                api_key: parts[1].trim()
+            });
+        }
+    }
+
+    if (entries.length === 0) {
+        return showToast('No valid format found (expected: URL,API_KEY on each line).', 'danger');
+    }
+
+    toggleLoading(true);
+    const res = await apiRequest({
+        action: 'add_yolo_keys',
+        entries: entries
+    });
+    toggleLoading(false);
+    
+    if (res.success) {
+        showToast(res.message);
+        document.getElementById('bulkYoloKeys').value = '';
+        loadYoloKeys();
+    } else {
+        showToast('Failed: ' + res.message, 'danger');
+    }
+}
+
+async function testYoloKey(id) {
+    toggleLoading(true);
+    const res = await apiRequest({
+        action: 'test_yolo_key',
+        key_id: id
+    });
+    toggleLoading(false);
+    
+    if (res.success) {
+        showToast(res.message, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+    loadYoloKeys();
+}
+
+async function deleteYoloKey(id) {
+    if (!confirm('Delete this YOLO deployment from pool?')) return;
+    
+    toggleLoading(true);
+    const res = await apiRequest({
+        action: 'delete_yolo_key',
+        key_id: id
+    });
+    toggleLoading(false);
+    
+    if (res.success) {
+        showToast('YOLO deployment deleted.');
+        loadYoloKeys();
+    } else {
+        showToast('Failed to delete deployment: ' + res.message, 'danger');
     }
 }

@@ -88,6 +88,12 @@ try {
         case 'test_deepgram_key': testDeepgramKey($pdo, $input); break;
         case 'delete_deepgram_key': deleteDeepgramKey($pdo, $input); break;
         
+        // YOLO Actions
+        case 'get_yolo_keys': getYoloKeys($pdo, $input); break;
+        case 'add_yolo_keys': addYoloKeys($pdo, $input); break;
+        case 'test_yolo_key': testYoloKey($pdo, $input); break;
+        case 'delete_yolo_key': deleteYoloKey($pdo, $input); break;
+        
         case 'report_key_failure': reportKeyFailure($pdo, $input); break;
         
         // YouTube Cookies Pool Actions
@@ -240,6 +246,23 @@ function validateLicense($pdo, $input) {
                 $data['credentials'][$t] = fetchCredential($pdo, $t);
             }
         }
+    }
+    
+    // Fetch active YOLO credentials from pool (endpoint and key)
+    try {
+        $stmt = $pdo->query("SELECT endpoint_url, api_key FROM yolo_keys WHERE status = 'active' ORDER BY RAND() LIMIT 1");
+        $yolo = $stmt->fetch();
+        if ($yolo) {
+            $data['credentials']['yolo_endpoint'] = $yolo['endpoint_url'];
+            $data['credentials']['yolo_key'] = $yolo['api_key'];
+        } else {
+            // Fallback to static credentials if database pool is empty
+            $data['credentials']['yolo_endpoint'] = fetchCredential($pdo, 'yolo_endpoint');
+            $data['credentials']['yolo_key'] = fetchCredential($pdo, 'yolo_key');
+        }
+    } catch (Exception $e) {
+        $data['credentials']['yolo_endpoint'] = fetchCredential($pdo, 'yolo_endpoint');
+        $data['credentials']['yolo_key'] = fetchCredential($pdo, 'yolo_key');
     }
     
     echo json_encode(['success' => true, 'data' => $data]);
@@ -761,6 +784,85 @@ function toggleYoutubeCookieStatus($pdo, $input) {
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+}
+
+// --- Bulk YOLO Handlers ---
+
+function getYoloKeys($pdo, $input) {
+    try {
+        $stmt = $pdo->query("SELECT id, endpoint_url, CONCAT(LEFT(api_key, 8), '...', RIGHT(api_key, 4)) as api_key_masked, status, last_checked FROM yolo_keys ORDER BY created_at DESC");
+        echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function addYoloKeys($pdo, $input) {
+    $entries = $input['entries'] ?? [];
+    $added = 0;
+    $validCount = 0;
+    
+    foreach ($entries as $entry) {
+        $url = trim($entry['endpoint_url'] ?? '');
+        $key = trim($entry['api_key'] ?? '');
+        
+        if (empty($url) || empty($key)) continue;
+        
+        $isValid = validateYoloKey($url, $key);
+        $status = $isValid ? 'active' : 'dead';
+        if ($isValid) $validCount++;
+        
+        try {
+            $stmt = $pdo->prepare("INSERT INTO yolo_keys (endpoint_url, api_key, status, last_checked) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE api_key = ?, status = ?, last_checked = NOW()");
+            $stmt->execute([$url, $key, $status, $key, $status]);
+            $added++;
+        } catch (Exception $e) {
+            // ignore duplicate/db errors
+        }
+    }
+    echo json_encode(['success' => true, 'message' => "$added YOLO deployments registered. ($validCount Valid)"]);
+}
+
+function testYoloKey($pdo, $input) {
+    $id = $input['key_id'] ?? 0;
+    $stmt = $pdo->prepare("SELECT endpoint_url, api_key FROM yolo_keys WHERE id = ?");
+    $stmt->execute([$id]);
+    $key = $stmt->fetch();
+    
+    if (!$key) {
+        echo json_encode(['success' => false, 'message' => 'YOLO Deployment not found']);
+        return;
+    }
+    
+    $isValid = validateYoloKey($key['endpoint_url'], $key['api_key']);
+    $status = $isValid ? 'active' : 'dead';
+    
+    $pdo->prepare("UPDATE yolo_keys SET status = ?, last_checked = NOW() WHERE id = ?")
+        ->execute([$status, $id]);
+        
+    echo json_encode(['success' => $isValid, 'message' => $isValid ? "Deployment is ACTIVE and responding" : "Deployment validation failed (Unauthorized/Timeout)"]);
+}
+
+function deleteYoloKey($pdo, $input) {
+    $id = $input['key_id'] ?? 0;
+    $pdo->prepare("DELETE FROM yolo_keys WHERE id = ?")->execute([$id]);
+    echo json_encode(['success' => true]);
+}
+
+function validateYoloKey($endpoint, $apiKey) {
+    $ch = curl_init(trim($endpoint));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "x-api-key: " . trim($apiKey)
+    ]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    return ($code === 200 || $code === 400 || $code === 422);
 }
 
 

@@ -47,6 +47,10 @@ if (!isset($_SESSION['admin_auth'])) {
                     <i data-lucide="shield-check"></i>
                     <span>Server Credentials</span>
                 </a>
+                <a class="nav-item" onclick="switchTab('yolo', this)">
+                    <i data-lucide="video"></i>
+                    <span>YOLO Deployments</span>
+                </a>
                 <a class="nav-item" onclick="switchTab('broadcast', this)">
                     <i data-lucide="megaphone"></i>
                     <span>Broadcast</span>
@@ -513,6 +517,24 @@ if (!isset($_SESSION['admin_auth'])) {
                     </div>
                 </div>
 
+                <!-- YOLO Deployments Panel -->
+                <div id="panel-yolo" class="tab-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">YOLO API Deployments Pool</h3>
+                            <button class="btn btn-primary btn-sm" onclick="showModal('yoloModal'); loadYoloKeys();">Manage YOLO Deployments</button>
+                        </div>
+                        <div class="card-body">
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 20px;">
+                                Active YOLO endpoints: <span id="yoloCount" style="color: var(--primary); font-weight: 700;">0</span>
+                            </p>
+                            <div id="yoloStatusGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Broadcast Panel -->
                 <div id="panel-broadcast" class="tab-panel">
                     <div class="card">
@@ -847,6 +869,41 @@ if (!isset($_SESSION['admin_auth'])) {
                             </tr>
                         </thead>
                         <tbody id="youtubeCookiesBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YOLO Bulk Modal -->
+    <div id="yoloModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Bulk Manage YOLO Deployments</h3>
+                <button class="btn btn-secondary btn-sm" onclick="hideModal('yoloModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Add Deployments (Format: <code>endpoint_url,api_key</code> - one per line)</label>
+                    <textarea id="bulkYoloKeys" rows="6" placeholder="https://predict-xxx.a.run.app/predict,ul_xxx&#10;https://predict-yyy.a.run.app/predict,ul_yyy" style="font-family: monospace; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.1); color: var(--text-color); resize: vertical;"></textarea>
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="handleBulkYolo()">Import Deployments</button>
+
+                <h4 style="margin: 24px 0 12px;">Active Deployments Pool</h4>
+                <div id="yoloListTable" class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                           <tr>
+                               <th>Endpoint URL</th>
+                               <th>API Key</th>
+                               <th>Status</th>
+                               <th>Last Checked</th>
+                               <th>Action</th>
+                           </tr>
+                        </thead>
+                        <tbody id="yoloKeysBody">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
