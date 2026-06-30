@@ -382,7 +382,7 @@ function getGeminiKeys($pdo, $input) {
     echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
 }
 
-function validateGeminiKey($apiKey, $model = 'gemini-flash-latest') {
+function validateGeminiKey($apiKey, $model = 'gemini-flash-latest', &$errorMessage = null) {
     // Allowed models only
     $allowedModels = [
         'gemini-3.5-flash',
@@ -426,7 +426,20 @@ function validateGeminiKey($apiKey, $model = 'gemini-flash-latest') {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     
-    return $httpCode === 200;
+    if ($httpCode !== 200) {
+        $errorMessage = "HTTP {$httpCode}";
+        if ($response) {
+            $respData = json_decode($response, true);
+            if (isset($respData['error']['message'])) {
+                $errorMessage .= " - " . $respData['error']['message'];
+            } else {
+                $errorMessage .= " - " . substr($response, 0, 150);
+            }
+        }
+        return false;
+    }
+    
+    return true;
 }
 
 function addGeminiKeys($pdo, $input) {
@@ -464,7 +477,8 @@ function testGeminiKey($pdo, $input) {
     }
     
     $model = $input['model'] ?? 'gemini-flash-latest';
-    $isValid = validateGeminiKey($key, $model);
+    $errorMessage = '';
+    $isValid = validateGeminiKey($key, $model, $errorMessage);
     $status = $isValid ? 'active' : 'invalid';
     
     $pdo->prepare("UPDATE gemini_keys SET status = ?, last_checked = NOW() WHERE id = ?")
@@ -473,7 +487,7 @@ function testGeminiKey($pdo, $input) {
     if ($isValid) {
         echo json_encode(['success' => true, 'message' => "Key is VALID and Active [Model: $model]"]);
     } else {
-        echo json_encode(['success' => false, 'message' => "Key is INVALID/Expired [Model: $model]"]);
+        echo json_encode(['success' => false, 'message' => "Key is INVALID/Expired [Model: $model]. Detail: {$errorMessage}"]);
     }
 }
 
